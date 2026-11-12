@@ -11,9 +11,10 @@ from collections import Counter
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Dict, TextIO, Tuple
+from typing import Dict, TextIO
 
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
 REQUIRED_COLUMNS = ("tid", "amount", "status", "date")
 
@@ -30,7 +31,12 @@ def write_output(uri: str, result: Dict[str, object]) -> None:
     payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if uri.startswith("s3://"):
         bucket, key = uri[5:].split("/", 1)
-        boto3.client("s3").put_object(Bucket=bucket, Key=key, Body=payload.encode("utf-8"), ContentType="application/json")
+        boto3.client("s3").put_object(
+            Bucket=bucket,
+            Key=key,
+            Body=payload.encode("utf-8"),
+            ContentType="application/json",
+        )
         return
     path = Path(uri)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -76,15 +82,11 @@ def main() -> int:
     try:
         result = summarize(args.input)
         write_output(args.output, result)
-    except (OSError, ValueError, Boto3Error) as exc:
+    except (OSError, ValueError, BotoCoreError, ClientError) as exc:
         print(f"ECS processing failed: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0
-
-
-class Boto3Error(Exception):
-    """Placeholder replaced by the broad boto3 client error tuple at runtime."""
 
 
 if __name__ == "__main__":
