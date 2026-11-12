@@ -1,0 +1,10 @@
+{
+  "first_transaction_date": "2026-11-12T10:30:00Z",
+  "last_transaction_date": "2026-11-12T11:05:00Z",
+  "status_counts": {
+    "FAILED": 1,
+    "SUCCESS": 3
+  },
+  "total_amount": 2705.5,
+  "total_transactions": 4
+}
